@@ -132,12 +132,12 @@ export const MRT_TableBodyRow = ({
             <MRT_TableBodyCell key={cell.id} {...props} />
           );
 
-          if (virtualPaddingLeft && (cellOrVirtualCell as VirtualItem).index === (table.getLeftLeafColumns().length - 1)) {
+          if (virtualPaddingLeft && cell.column.getIsPinned() === 'left' && cell.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [
               renderedCell,
               <th key="vp_left" style={{ display: 'flex', width: virtualPaddingLeft }} />,
             ]
-          } else if (virtualPaddingRight && (cellOrVirtualCell as VirtualItem).index === (table.getVisibleLeafColumns().length - table.getRightLeafColumns().length)) {
+          } else if (virtualPaddingRight && cell.column.getIsPinned() === 'right' && cell.column.getPinnedIndex() === (table.getRightLeafColumns().length - 1)) {
             return [
               <th key="vp_right"  style={{ display: 'flex', width: virtualPaddingRight }} />,
               renderedCell

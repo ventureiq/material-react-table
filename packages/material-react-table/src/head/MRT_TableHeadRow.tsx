@@ -54,12 +54,12 @@ export const MRT_TableHeadRow = ({
           : (headerOrVirtualHeader as MRT_Header);
 
         const renderedCell = <MRT_TableHeadCell header={header} key={header.id} table={table} />;
-        if (virtualPaddingLeft && headerOrVirtualHeader.index === (table.getLeftLeafColumns().length - 1)) {
+        if (virtualPaddingLeft && header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [
                 renderedCell,
                 <th key="vp_left"  style={{ display: 'flex', width: virtualPaddingLeft }} />,
             ]
-        } else if (virtualPaddingRight && headerOrVirtualHeader.index === (table.getVisibleLeafColumns().length - table.getRightLeafColumns().length)) {
+        } else if (virtualPaddingRight && header.column.getIsPinned() === 'right' && header.column.getPinnedIndex() === (table.getRightLeafColumns().length - 1)) {
             return [
                 <th key="vp_right"  style={{ display: 'flex', width: virtualPaddingRight }} />,
                 renderedCell
