@@ -122,7 +122,7 @@ export const MRT_Table = ({ table }: Props) => {
   }
 
   const virtualColumns = columnVirtualizer
-    ? columnVirtualizer.getVirtualItems()
+    ? columnVirtualizer.getVirtualItems()?.sort((a, b) => a.index - b.index)
     : undefined;
 
   let virtualPaddingLeft: number | undefined;

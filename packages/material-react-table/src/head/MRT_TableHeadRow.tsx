@@ -45,8 +45,8 @@ export const MRT_TableHeadRow = ({
           : (tableRowProps?.sx as any)),
       })}
     >
-      {(virtualPaddingLeft && table.getLeftLeafColumns().length === 0) ? (
-          <td style={{ display: 'flex', width: virtualPaddingRight }} />
+      {(table.getLeftLeafColumns().length === 0) ? (
+          <td style={{ display: 'flex', width: virtualPaddingLeft }} />
       ) : null}
       {(virtualColumns ?? headerGroup.headers).map((headerOrVirtualHeader) => {
         const header = virtualColumns
@@ -54,12 +54,12 @@ export const MRT_TableHeadRow = ({
           : (headerOrVirtualHeader as MRT_Header);
 
         const renderedCell = <MRT_TableHeadCell header={header} key={header.id} table={table} />;
-        if (virtualPaddingLeft && header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
+        if (header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [
                 renderedCell,
                 <th key="vp_left"  style={{ display: 'flex', width: virtualPaddingLeft }} />,
             ]
-        } else if (virtualPaddingRight && header.column.getIsPinned() === 'right' && header.column.getPinnedIndex() === (table.getRightLeafColumns().length - 1)) {
+        } else if (header.column.getIsPinned() === 'right' && header.column.getPinnedIndex() === 0) {
             return [
                 <th key="vp_right"  style={{ display: 'flex', width: virtualPaddingRight }} />,
                 renderedCell
@@ -68,7 +68,7 @@ export const MRT_TableHeadRow = ({
             return renderedCell;
         }
       })}
-      {(virtualPaddingRight && table.getRightLeafColumns().length === 0) ? (
+      {(table.getRightLeafColumns().length === 0) ? (
           <td style={{ display: 'flex', width: virtualPaddingRight }} />
       ) : null}
     </TableRow>

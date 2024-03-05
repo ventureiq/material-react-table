@@ -102,8 +102,8 @@ export const MRT_TableBodyRow = ({
           ...tableRowProps?.style,
         }}
       >
-        {(virtualPaddingLeft && table.getLeftLeafColumns().length === 0) ? (
-            <td style={{ display: 'flex', width: virtualPaddingRight }} />
+        {(table.getLeftLeafColumns().length === 0) ? (
+            <td style={{ display: 'flex', width: virtualPaddingLeft }} />
         ) : null}
         {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell) => {
           const cell = columnVirtualizer
@@ -132,12 +132,12 @@ export const MRT_TableBodyRow = ({
             <MRT_TableBodyCell key={cell.id} {...props} />
           );
 
-          if (virtualPaddingLeft && cell.column.getIsPinned() === 'left' && cell.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
+          if (cell.column.getIsPinned() === 'left' && cell.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [
               renderedCell,
               <th key="vp_left" style={{ display: 'flex', width: virtualPaddingLeft }} />,
             ]
-          } else if (virtualPaddingRight && cell.column.getIsPinned() === 'right' && cell.column.getPinnedIndex() === (table.getRightLeafColumns().length - 1)) {
+          } else if (cell.column.getIsPinned() === 'right' && cell.column.getPinnedIndex() === 0) {
             return [
               <th key="vp_right"  style={{ display: 'flex', width: virtualPaddingRight }} />,
               renderedCell
@@ -146,7 +146,7 @@ export const MRT_TableBodyRow = ({
             return renderedCell;
           }
         })}
-        {(virtualPaddingRight && table.getRightLeafColumns().length === 0) ? (
+        {(table.getRightLeafColumns().length === 0) ? (
           <td style={{ display: 'flex', width: virtualPaddingRight }} />
         ) : null}
       </TableRow>
