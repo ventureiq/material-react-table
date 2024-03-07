@@ -102,8 +102,10 @@ export const MRT_TableBodyRow = ({
           ...tableRowProps?.style,
         }}
       >
-        {(table.getLeftLeafColumns().length === 0) ? (
-            <td style={{ display: 'flex', width: virtualPaddingLeft }} />
+        {(virtualColumns && table.getLeftLeafColumns().length === 0) ? (
+            <td key="vp_left"
+                className="MuiTableCell-padding MuiTableCell-padding-left"
+                style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
         ) : null}
         {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell) => {
           const cell = columnVirtualizer
@@ -132,22 +134,28 @@ export const MRT_TableBodyRow = ({
             <MRT_TableBodyCell key={cell.id} {...props} />
           );
 
-          if (cell.column.getIsPinned() === 'left' && cell.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
+          if (virtualColumns && cell.column.getIsPinned() === 'left' && cell.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [
               renderedCell,
-              <th key="vp_left" style={{ display: 'flex', width: virtualPaddingLeft }} />,
+              <td key="vp_left"
+                  className="MuiTableCell-padding MuiTableCell-padding-left"
+                  style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />,
             ]
-          } else if (cell.column.getIsPinned() === 'right' && cell.column.getPinnedIndex() === 0) {
+          } else if (virtualColumns && cell.column.getIsPinned() === 'right' && cell.column.getPinnedIndex() === 0) {
             return [
-              <th key="vp_right"  style={{ display: 'flex', width: virtualPaddingRight }} />,
+              <td key="vp_right"
+                  className="MuiTableCell-padding MuiTableCell-padding-right"
+                  style={{ display: 'flex', padding: '0px', width: virtualPaddingRight }} />,
               renderedCell
             ]
           } else {
             return renderedCell;
           }
         })}
-        {(table.getRightLeafColumns().length === 0) ? (
-          <td style={{ display: 'flex', width: virtualPaddingRight }} />
+        {(virtualColumns && table.getRightLeafColumns().length === 0) ? (
+          <td key="vp_right"
+              className="MuiTableCell-padding MuiTableCell-padding-right"
+              style={{ display: 'flex', padding: '0px', width: virtualPaddingRight }} />
         ) : null}
       </TableRow>
       {renderDetailPanel && !row.getIsGrouped() && (

@@ -45,8 +45,10 @@ export const MRT_TableHeadRow = ({
           : (tableRowProps?.sx as any)),
       })}
     >
-      {(table.getLeftLeafColumns().length === 0) ? (
-          <td style={{ display: 'flex', width: virtualPaddingLeft }} />
+      {(virtualColumns && table.getLeftLeafColumns().length === 0) ? (
+          <th key="vp_left"
+              className="MuiTableCell-padding MuiTableCell-padding-left"
+              style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
       ) : null}
       {(virtualColumns ?? headerGroup.headers).map((headerOrVirtualHeader) => {
         const header = virtualColumns
@@ -54,22 +56,26 @@ export const MRT_TableHeadRow = ({
           : (headerOrVirtualHeader as MRT_Header);
 
         const renderedCell = <MRT_TableHeadCell header={header} key={header.id} table={table} />;
-        if (header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
+        if (virtualColumns && header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [
                 renderedCell,
-                <th key="vp_left"  style={{ display: 'flex', width: virtualPaddingLeft }} />,
+                <th key="vp_left"
+                    className="MuiTableCell-padding MuiTableCell-padding-left"
+                    style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />,
             ]
-        } else if (header.column.getIsPinned() === 'right' && header.column.getPinnedIndex() === 0) {
+        } else if (virtualColumns && header.column.getIsPinned() === 'right' && header.column.getPinnedIndex() === 0) {
             return [
-                <th key="vp_right"  style={{ display: 'flex', width: virtualPaddingRight }} />,
+                <th key="vp_right"
+                    className="MuiTableCell-padding MuiTableCell-padding-right"
+                    style={{ display: 'flex', padding: '0px', width: virtualPaddingRight }} />,
                 renderedCell
             ]
         } else {
             return renderedCell;
         }
       })}
-      {(table.getRightLeafColumns().length === 0) ? (
-          <td style={{ display: 'flex', width: virtualPaddingRight }} />
+      {(virtualColumns && table.getRightLeafColumns().length === 0) ? (
+          <th key="vp_right" style={{ display: 'flex', padding: '0px', width: virtualPaddingRight }} />
       ) : null}
     </TableRow>
   );
