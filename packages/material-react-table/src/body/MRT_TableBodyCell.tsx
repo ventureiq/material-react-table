@@ -4,7 +4,7 @@ import {
   type MouseEvent,
   type RefObject,
   useEffect,
-  useMemo,
+  useMemo, useRef,
   useState,
 } from 'react';
 import Skeleton from '@mui/material/Skeleton';
@@ -41,6 +41,7 @@ export const MRT_TableBodyCell = ({
   table,
   virtualCell,
 }: Props) => {
+  const isEditingRef = useRef(false);
   const theme = useTheme();
   const {
     getState,
@@ -164,6 +165,13 @@ export const MRT_TableBodyCell = ({
       editingCell?.id === cell.id) &&
     !row.getIsGrouped();
 
+  let wasEditing = false;
+  if (isEditing) {
+    isEditingRef.current = true;
+  } else if (isEditingRef.current) {
+    wasEditing = true;
+  }
+
   const handleDoubleClick = (event: MouseEvent<HTMLTableCellElement>) => {
     tableCellProps?.onDoubleClick?.(event);
     if (isEditable && editingMode === 'cell') {
@@ -276,6 +284,7 @@ export const MRT_TableBodyCell = ({
             !row.getIsGrouped()) ? (
           columnDef.Cell?.({
             cell,
+            wasEditing,
             renderedCellValue: cell.renderValue() as any,
             column,
             row,
@@ -286,10 +295,10 @@ export const MRT_TableBodyCell = ({
         ) : (enableClickToCopy || columnDef.enableClickToCopy) &&
           columnDef.enableClickToCopy !== false ? (
           <MRT_CopyButton cell={cell} table={table}>
-            <MRT_TableBodyCellValue cell={cell} table={table} />
+            <MRT_TableBodyCellValue cell={cell} table={table} wasEditing={wasEditing}/>
           </MRT_CopyButton>
         ) : (
-          <MRT_TableBodyCellValue cell={cell} table={table} />
+          <MRT_TableBodyCellValue cell={cell} table={table} wasEditing={wasEditing}/>
         )}
         {cell.getIsGrouped() && !columnDef.GroupedCell && (
           <> ({row.subRows?.length})</>

@@ -212,10 +212,11 @@ export const MRT_TableBody = ({
                   ? (rowOrVirtualRow as VirtualItem)
                   : undefined,
               };
+              const key = `key_${rowIndex}`;
               return memoMode === 'rows' ? (
-                <Memo_MRT_TableBodyRow key={row.id} {...props} />
+                <Memo_MRT_TableBodyRow key={key} {...props} />
               ) : (
-                <MRT_TableBodyRow key={row.id} {...props} />
+                <MRT_TableBodyRow key={key} {...props} />
               );
             })}
           </>

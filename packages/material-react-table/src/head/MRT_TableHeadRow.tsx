@@ -50,12 +50,13 @@ export const MRT_TableHeadRow = ({
               className="MuiTableCell-padding MuiTableCell-padding-left"
               style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
       ) : null}
-      {(virtualColumns ?? headerGroup.headers).map((headerOrVirtualHeader) => {
+      {(virtualColumns ?? headerGroup.headers).map((headerOrVirtualHeader, idx) => {
         const header = virtualColumns
           ? headerGroup.headers[headerOrVirtualHeader.index]
           : (headerOrVirtualHeader as MRT_Header);
 
-        const renderedCell = <MRT_TableHeadCell header={header} key={header.id} table={table} />;
+        const key = header.column.getIsPinned() ? header.id : `key_${idx}`;
+        const renderedCell = <MRT_TableHeadCell key={key} header={header} table={table} />;
         if (virtualColumns && header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [
                 renderedCell,

@@ -107,11 +107,12 @@ export const MRT_TableBodyRow = ({
                 className="MuiTableCell-padding MuiTableCell-padding-left"
                 style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
         ) : null}
-        {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell) => {
+        {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell, idx) => {
           const cell = columnVirtualizer
             ? row.getVisibleCells()[(cellOrVirtualCell as VirtualItem).index]
             : (cellOrVirtualCell as MRT_Cell);
 
+          const key = cell.column.getIsPinned() ? cell.id : `key_${idx}`;
           const props = {
             cell,
             measureElement: columnVirtualizer?.measureElement,
@@ -129,9 +130,9 @@ export const MRT_TableBodyRow = ({
             !draggingRow &&
             editingCell?.id !== cell.id &&
             editingRow?.id !== row.id ? (
-            <Memo_MRT_TableBodyCell key={cell.id} {...props} />
+            <Memo_MRT_TableBodyCell key={key} {...props} />
           ) : (
-            <MRT_TableBodyCell key={cell.id} {...props} />
+            <MRT_TableBodyCell key={key} {...props} />
           );
 
           if (virtualColumns && cell.column.getIsPinned() === 'left' && cell.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {

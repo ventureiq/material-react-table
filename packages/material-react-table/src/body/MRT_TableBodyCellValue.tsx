@@ -9,9 +9,10 @@ const allowedTypes = ['string', 'number'];
 interface Props {
   cell: MRT_Cell;
   table: MRT_TableInstance;
+  wasEditing: boolean
 }
 
-export const MRT_TableBodyCellValue = ({ cell, table }: Props) => {
+export const MRT_TableBodyCellValue = ({ cell, table, wasEditing }: Props) => {
   const {
     getState,
     options: { enableFilterMatchHighlighting },
@@ -98,6 +99,7 @@ export const MRT_TableBodyCellValue = ({ cell, table }: Props) => {
   if (columnDef.Cell && !isGroupedValue) {
     renderedCellValue = columnDef.Cell({
       cell,
+      wasEditing,
       renderedCellValue,
       column,
       row,
