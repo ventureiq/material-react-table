@@ -11,6 +11,7 @@ import { Memo_MRT_TableBody, MRT_TableBody } from '../body/MRT_TableBody';
 import { MRT_TableFooter } from '../footer/MRT_TableFooter';
 import { parseCSSVarId } from '../column.utils';
 import { type MRT_TableInstance } from '../types';
+import {useRecycleSlots} from "../hook.utils";
 
 interface Props {
   table: MRT_TableInstance;
@@ -137,11 +138,24 @@ export const MRT_Table = ({ table }: Props) => {
             (columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - rightPinnedIndexes.length]?.start ?? 0))));
   }
 
+  const columnRecycleSlots = useRecycleSlots();
+  if (virtualColumns) {
+    const columns = table.getVisibleLeafColumns();
+    columnRecycleSlots.refresh(virtualColumns, (
+      columns.filter((c) => c.getIsPinned() === 'left')
+        .sort((a, b) => a.getPinnedIndex() - b.getPinnedIndex())
+        .concat(columns.filter((c) => !c.getIsPinned()))
+        .concat(columns.filter((c) => c.getIsPinned() === 'right')
+          .sort((a, b) => a.getPinnedIndex() - b.getPinnedIndex()))
+    ));
+  }
+
   const props = {
     table,
     virtualColumns,
     virtualPaddingLeft,
     virtualPaddingRight,
+    columnRecycleSlots
   };
 
   return (

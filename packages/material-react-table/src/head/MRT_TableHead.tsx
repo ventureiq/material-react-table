@@ -8,6 +8,7 @@ interface Props {
   virtualColumns?: VirtualItem[];
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
+  columnRecycleSlots?: any;
 }
 
 export const MRT_TableHead = ({
@@ -15,6 +16,7 @@ export const MRT_TableHead = ({
   virtualColumns,
   virtualPaddingLeft,
   virtualPaddingRight,
+  columnRecycleSlots
 }: Props) => {
   const {
     getHeaderGroups,
@@ -52,6 +54,7 @@ export const MRT_TableHead = ({
           virtualColumns={virtualColumns}
           virtualPaddingLeft={virtualPaddingLeft}
           virtualPaddingRight={virtualPaddingRight}
+          columnRecycleSlots={columnRecycleSlots}
         />
       ))}
     </TableHead>

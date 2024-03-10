@@ -14,6 +14,7 @@ interface Props {
   virtualColumns?: VirtualItem[];
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
+  columnRecycleSlots?: any;
 }
 
 export const MRT_TableHeadRow = ({
@@ -22,6 +23,7 @@ export const MRT_TableHeadRow = ({
   virtualColumns,
   virtualPaddingLeft,
   virtualPaddingRight,
+  columnRecycleSlots
 }: Props) => {
   const {
     options: { layoutMode, muiTableHeadRowProps },
@@ -50,12 +52,14 @@ export const MRT_TableHeadRow = ({
               className="MuiTableCell-padding MuiTableCell-padding-left"
               style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
       ) : null}
-      {(virtualColumns ?? headerGroup.headers).map((headerOrVirtualHeader, idx) => {
+      {(virtualColumns ?? headerGroup.headers).map((headerOrVirtualHeader) => {
         const header = virtualColumns
           ? headerGroup.headers[headerOrVirtualHeader.index]
           : (headerOrVirtualHeader as MRT_Header);
 
-        const key = header.column.getIsPinned() ? header.id : `key_${idx}`;
+        const slotIdx = virtualColumns ? columnRecycleSlots.slot(header.id)?.idx : header.id;
+        const key = `key_${slotIdx}`;
+
         const renderedCell = <MRT_TableHeadCell key={key} header={header} table={table} />;
         if (virtualColumns && header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
             return [

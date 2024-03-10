@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import { Memo_MRT_TableBodyRow, MRT_TableBodyRow } from './MRT_TableBodyRow';
 import { rankGlobalFuzzy } from '../sortingFns';
 import { type MRT_Row, type MRT_TableInstance } from '../types';
+import {useRecycleSlots} from "../hook.utils";
 
 interface Props {
   columnVirtualizer?: Virtualizer<HTMLDivElement, HTMLTableCellElement>;
@@ -16,6 +17,7 @@ interface Props {
   virtualColumns?: VirtualItem[];
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
+  columnRecycleSlots?: any;
 }
 
 export const MRT_TableBody = ({
@@ -24,6 +26,7 @@ export const MRT_TableBody = ({
   virtualColumns,
   virtualPaddingLeft,
   virtualPaddingRight,
+  columnRecycleSlots
 }: Props) => {
   const {
     getRowModel,
@@ -148,6 +151,11 @@ export const MRT_TableBody = ({
     ? rowVirtualizer.getVirtualItems()
     : undefined;
 
+  const rowRecycleSlots = useRecycleSlots();
+  if (virtualRows) {
+    rowRecycleSlots.refresh(virtualRows, rows);
+  }
+
   return (
     <TableBody
       {...tableBodyProps}
@@ -198,8 +206,14 @@ export const MRT_TableBody = ({
               const row = rowVirtualizer
                 ? rows[rowOrVirtualRow.index]
                 : (rowOrVirtualRow as MRT_Row);
+
+              const slotIdx = virtualRows ? rowRecycleSlots.slot(row.id)?.idx : row.id;
+              const virtualRow = virtualRows ? virtualRows?.[rowRecycleSlots.slot(row.id)?.row] : rowOrVirtualRow;
+              const key = `key_${slotIdx}`;
+
               const props = {
                 columnVirtualizer,
+                columnRecycleSlots,
                 measureElement: rowVirtualizer?.measureElement,
                 numRows: rows.length,
                 row,
@@ -209,10 +223,10 @@ export const MRT_TableBody = ({
                 virtualPaddingLeft,
                 virtualPaddingRight,
                 virtualRow: rowVirtualizer
-                  ? (rowOrVirtualRow as VirtualItem)
+                  ? (virtualRow as VirtualItem)
                   : undefined,
               };
-              const key = `key_${rowIndex}`;
+
               return memoMode === 'rows' ? (
                 <Memo_MRT_TableBodyRow key={key} {...props} />
               ) : (

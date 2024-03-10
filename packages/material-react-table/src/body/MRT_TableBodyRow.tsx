@@ -17,6 +17,7 @@ interface Props {
   virtualPaddingLeft?: number;
   virtualPaddingRight?: number;
   virtualRow?: VirtualItem;
+  columnRecycleSlots?: any;
 }
 
 export const MRT_TableBodyRow = ({
@@ -30,6 +31,7 @@ export const MRT_TableBodyRow = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   virtualRow,
+  columnRecycleSlots
 }: Props) => {
   const {
     getState,
@@ -107,12 +109,15 @@ export const MRT_TableBodyRow = ({
                 className="MuiTableCell-padding MuiTableCell-padding-left"
                 style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
         ) : null}
-        {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell, idx) => {
+        {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell) => {
           const cell = columnVirtualizer
             ? row.getVisibleCells()[(cellOrVirtualCell as VirtualItem).index]
             : (cellOrVirtualCell as MRT_Cell);
 
-          const key = cell.column.getIsPinned() ? cell.id : `key_${idx}`;
+          const slotIdx = virtualColumns ? columnRecycleSlots.slot(cell.column.id)?.idx : cell.column.id;
+          const virtualColumn = virtualColumns ? virtualColumns?.[columnRecycleSlots.slot(cell.column.id)?.row] : cellOrVirtualCell;
+          const key = `key_${slotIdx}`;
+
           const props = {
             cell,
             measureElement: columnVirtualizer?.measureElement,
@@ -121,7 +126,7 @@ export const MRT_TableBodyRow = ({
             rowRef,
             table,
             virtualCell: columnVirtualizer
-              ? (cellOrVirtualCell as VirtualItem)
+              ? (virtualColumn as VirtualItem)
               : undefined,
           };
           const renderedCell = memoMode === 'cells' &&
