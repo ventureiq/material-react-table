@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.14.0",
   "license": "MIT",
-  "name": "@ventureiq/material-react-table",
+  "name": "material-react-table",
   "description": "A fully featured Material UI V5 implementation of TanStack React Table V8, written from the ground up in TypeScript.",
   "author": "Kevin Vandy",
   "keywords": [
