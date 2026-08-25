@@ -262,17 +262,37 @@ export const getCommonCellStyles = ({
   tableCellProps: TableCellProps;
   theme: Theme;
 }) => {
+  // this runs for every cell of every row. Nothing below can change mid-expression,
+  // so each of these is read once instead of repeatedly: getIsPinned() was called
+  // six times, and it is not cheap - it maps every leaf column id and scans the
+  // pinning arrays twice. getState() was read four times, parseCSSVarId three.
+  const { enableColumnResizing, enableColumnVirtualization, layoutMode } =
+    table.options;
+  const state = table.getState();
+  const pinned = column.getIsPinned();
+  const isGroup = column.columnDef.columnDefType === 'group';
+  const sizeVar = `${header ? 'header' : 'col'}-${parseCSSVarId(
+    header?.id ?? column.id,
+  )}`;
+
+  // getPinnedIndex() calls getIsPinned() again internally, so it stays behind the
+  // same short circuits the original had
+  const isLeftEdge =
+    enableColumnVirtualization && pinned === 'left' && column.getPinnedIndex() === 0;
+  const isRightEdge =
+    enableColumnVirtualization &&
+    pinned === 'right' &&
+    column.getPinnedIndex() === table.getVisibleLeafColumns().length - 1;
+
   const widthStyles = {
-    minWidth: `max(calc(var(--${header ? 'header' : 'col'}-${parseCSSVarId(
-      header?.id ?? column.id,
-    )}-size) * 1px), ${column.columnDef.minSize ?? 30}px)`,
-    width: `calc(var(--${header ? 'header' : 'col'}-${parseCSSVarId(
-      header?.id ?? column.id,
-    )}-size) * 1px)`,
+    minWidth: `max(calc(var(--${sizeVar}-size) * 1px), ${
+      column.columnDef.minSize ?? 30
+    }px)`,
+    width: `calc(var(--${sizeVar}-size) * 1px)`,
   };
   return {
     backgroundColor:
-      column.getIsPinned() && column.columnDef.columnDefType !== 'group'
+      pinned && !isGroup
         ? alpha(lighten(theme.palette.background.default, 0.04), 0.97)
         : 'inherit',
     backgroundImage: 'inherit',
@@ -281,57 +301,32 @@ export const getCommonCellStyles = ({
       : getIsFirstRightPinnedColumn(column)
       ? `4px 0 8px -6px ${alpha(theme.palette.common.black, 0.2)} inset`
       : undefined,
-    display: table.options.layoutMode === 'grid' ? 'flex' : 'table-cell',
-    flex:
-      table.options.layoutMode === 'grid'
-        ? `var(--${header ? 'header' : 'col'}-${parseCSSVarId(
-            header?.id ?? column.id,
-          )}-size) 0 auto`
-        : undefined,
-    left:
-      column.getIsPinned() === 'left'
-        ? `${column.getStart('left')}px`
-        : undefined,
-    ml:
-      table.options.enableColumnVirtualization &&
-      column.getIsPinned() === 'left' &&
-      column.getPinnedIndex() === 0
-        ? `-${
-            column.getSize() *
-            (table.getState().columnPinning.left?.length ?? 1)
-          }px`
-        : undefined,
-    mr:
-      table.options.enableColumnVirtualization &&
-      column.getIsPinned() === 'right' &&
-      column.getPinnedIndex() === table.getVisibleLeafColumns().length - 1
-        ? `-${
-            column.getSize() *
-            (table.getState().columnPinning.right?.length ?? 1) *
-            1.2
-          }px`
-        : undefined,
+    display: layoutMode === 'grid' ? 'flex' : 'table-cell',
+    flex: layoutMode === 'grid' ? `var(--${sizeVar}-size) 0 auto` : undefined,
+    left: pinned === 'left' ? `${column.getStart('left')}px` : undefined,
+    ml: isLeftEdge
+      ? `-${column.getSize() * (state.columnPinning.left?.length ?? 1)}px`
+      : undefined,
+    mr: isRightEdge
+      ? `-${
+          column.getSize() * (state.columnPinning.right?.length ?? 1) * 1.2
+        }px`
+      : undefined,
     opacity:
-      table.getState().draggingColumn?.id === column.id ||
-      table.getState().hoveredColumn?.id === column.id
+      state.draggingColumn?.id === column.id ||
+      state.hoveredColumn?.id === column.id
         ? 0.5
         : 1,
-    position:
-      column.getIsPinned() && column.columnDef.columnDefType !== 'group'
-        ? 'sticky'
-        : undefined,
-    right:
-      column.getIsPinned() === 'right'
-        ? `${getTotalRight(table, column)}px`
-        : undefined,
-    transition: table.options.enableColumnVirtualization
+    position: pinned && !isGroup ? 'sticky' : undefined,
+    right: pinned === 'right' ? `${getTotalRight(table, column)}px` : undefined,
+    transition: enableColumnVirtualization
       ? 'none'
       : `padding 150ms ease-in-out`,
-    ...(!table.options.enableColumnResizing && widthStyles), //let devs pass in width styles if column resizing is disabled
+    ...(!enableColumnResizing && widthStyles), //let devs pass in width styles if column resizing is disabled
     ...(tableCellProps?.sx instanceof Function
       ? tableCellProps.sx(theme)
       : (tableCellProps?.sx as any)),
-    ...(table.options.enableColumnResizing && widthStyles), //don't let devs pass in width styles if column resizing is enabled
+    ...(enableColumnResizing && widthStyles), //don't let devs pass in width styles if column resizing is enabled
   };
 };
 
