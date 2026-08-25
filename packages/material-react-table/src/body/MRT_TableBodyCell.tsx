@@ -24,6 +24,7 @@ import { type MRT_Cell, type MRT_TableInstance } from '../types';
 
 interface Props {
   cell: MRT_Cell;
+  columnIndex: number;
   measureElement?: (element: HTMLTableCellElement) => void;
   numRows: number;
   rowIndex: number;
@@ -34,6 +35,7 @@ interface Props {
 
 export const MRT_TableBodyCell = ({
   cell,
+  columnIndex,
   measureElement,
   numRows,
   rowIndex,
@@ -284,6 +286,7 @@ export const MRT_TableBodyCell = ({
             !row.getIsGrouped()) ? (
           columnDef.Cell?.({
             cell,
+            columnIndex,
             wasEditing,
             renderedCellValue: cell.renderValue() as any,
             column,
