@@ -298,10 +298,10 @@ export const MRT_TableBodyCell = ({
         ) : (enableClickToCopy || columnDef.enableClickToCopy) &&
           columnDef.enableClickToCopy !== false ? (
           <MRT_CopyButton cell={cell} table={table}>
-            <MRT_TableBodyCellValue cell={cell} table={table} wasEditing={wasEditing}/>
+            <MRT_TableBodyCellValue cell={cell} columnIndex={columnIndex} table={table} wasEditing={wasEditing}/>
           </MRT_CopyButton>
         ) : (
-          <MRT_TableBodyCellValue cell={cell} table={table} wasEditing={wasEditing}/>
+          <MRT_TableBodyCellValue cell={cell} columnIndex={columnIndex} table={table} wasEditing={wasEditing}/>
         )}
         {cell.getIsGrouped() && !columnDef.GroupedCell && (
           <> ({row.subRows?.length})</>
