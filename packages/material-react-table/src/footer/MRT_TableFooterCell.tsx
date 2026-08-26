@@ -1,5 +1,5 @@
 import TableCell from '@mui/material/TableCell';
-import { getCommonCellStyles } from '../column.utils';
+import { getCommonCellStyles, getCommonCellVars } from '../column.utils';
 import { type MRT_Header, type MRT_TableInstance } from '../types';
 
 interface Props {
@@ -38,6 +38,10 @@ export const MRT_TableFooterCell = ({ footer, table }: Props) => {
       colSpan={footer.colSpan}
       variant="head"
       {...tableCellProps}
+      style={{
+        ...getCommonCellVars({column, table}),
+        ...tableCellProps?.style,
+      }}
       sx={(theme) => ({
         display: layoutMode === 'grid' ? 'grid' : 'table-cell',
         fontWeight: 'bold',

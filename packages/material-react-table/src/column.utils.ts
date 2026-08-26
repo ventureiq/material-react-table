@@ -251,13 +251,12 @@ export const getTotalRight = (table: MRT_TableInstance, column: MRT_Column) => {
 
 export const getCommonCellStyles = ({
   column,
-  header,
   table,
   tableCellProps,
   theme,
 }: {
   column: MRT_Column;
-  header?: MRT_Header;
+  header?: MRT_Header; // consumed by getCommonCellVars, not here
   table: MRT_TableInstance;
   tableCellProps: TableCellProps;
   theme: Theme;
@@ -271,9 +270,6 @@ export const getCommonCellStyles = ({
   const state = table.getState();
   const pinned = column.getIsPinned();
   const isGroup = column.columnDef.columnDefType === 'group';
-  const sizeVar = `${header ? 'header' : 'col'}-${parseCSSVarId(
-    header?.id ?? column.id,
-  )}`;
 
   // getPinnedIndex() calls getIsPinned() again internally, so it stays behind the
   // same short circuits the original had
@@ -284,11 +280,13 @@ export const getCommonCellStyles = ({
     pinned === 'right' &&
     column.getPinnedIndex() === table.getVisibleLeafColumns().length - 1;
 
+  // Fixed names, so the css text is identical for every column. The per-column values are
+  // set inline by getCommonCellVars below: putting `--${sizeVar}-size` or a computed pixel
+  // straight into the rule makes the class unique per column, and with custom fields the
+  // column ids are data - a class per client field, none of it ever cacheable.
   const widthStyles = {
-    minWidth: `max(calc(var(--${sizeVar}-size) * 1px), ${
-      column.columnDef.minSize ?? 30
-    }px)`,
-    width: `calc(var(--${sizeVar}-size) * 1px)`,
+    minWidth: `max(calc(var(--mrt-size) * 1px), var(--mrt-min-size))`,
+    width: `calc(var(--mrt-size) * 1px)`,
   };
   return {
     backgroundColor:
@@ -302,23 +300,17 @@ export const getCommonCellStyles = ({
       ? `4px 0 8px -6px ${alpha(theme.palette.common.black, 0.2)} inset`
       : undefined,
     display: layoutMode === 'grid' ? 'flex' : 'table-cell',
-    flex: layoutMode === 'grid' ? `var(--${sizeVar}-size) 0 auto` : undefined,
-    left: pinned === 'left' ? `${column.getStart('left')}px` : undefined,
-    ml: isLeftEdge
-      ? `-${column.getSize() * (state.columnPinning.left?.length ?? 1)}px`
-      : undefined,
-    mr: isRightEdge
-      ? `-${
-          column.getSize() * (state.columnPinning.right?.length ?? 1) * 1.2
-        }px`
-      : undefined,
+    flex: layoutMode === 'grid' ? `var(--mrt-size) 0 auto` : undefined,
+    left: pinned === 'left' ? `var(--mrt-left)` : undefined,
+    ml: isLeftEdge ? `var(--mrt-ml)` : undefined,
+    mr: isRightEdge ? `var(--mrt-mr)` : undefined,
     opacity:
       state.draggingColumn?.id === column.id ||
       state.hoveredColumn?.id === column.id
         ? 0.5
         : 1,
     position: pinned && !isGroup ? 'sticky' : undefined,
-    right: pinned === 'right' ? `${getTotalRight(table, column)}px` : undefined,
+    right: pinned === 'right' ? `var(--mrt-right)` : undefined,
     transition: enableColumnVirtualization
       ? 'none'
       : `padding 150ms ease-in-out`,
@@ -328,6 +320,43 @@ export const getCommonCellStyles = ({
       : (tableCellProps?.sx as any)),
     ...(enableColumnResizing && widthStyles), //don't let devs pass in width styles if column resizing is enabled
   };
+};
+
+// The values behind the fixed names above, set as inline custom properties on the cell.
+// The table already publishes every column's size as `--header-x-size` / `--col-x-size` in
+// one inline style on the <table> (MRT_Table), so this only aliases it - resizing keeps
+// flowing through exactly the same path.
+export const getCommonCellVars = ({
+  column,
+  header,
+  table,
+}: {
+  column: MRT_Column;
+  header?: MRT_Header;
+  table: MRT_TableInstance;
+}) => {
+  const state = table.getState();
+  const pinned = column.getIsPinned();
+  const sizeVar = `${header ? 'header' : 'col'}-${parseCSSVarId(
+    header?.id ?? column.id,
+  )}`;
+
+  return {
+    '--mrt-size': `var(--${sizeVar}-size)`,
+    '--mrt-min-size': `${column.columnDef.minSize ?? 30}px`,
+    ...(pinned === 'left'
+      ? {'--mrt-left': `${column.getStart('left')}px`}
+      : null),
+    ...(pinned === 'right'
+      ? {'--mrt-right': `${getTotalRight(table, column)}px`}
+      : null),
+    '--mrt-ml': `-${
+      column.getSize() * (state.columnPinning.left?.length ?? 1)
+    }px`,
+    '--mrt-mr': `-${
+      column.getSize() * (state.columnPinning.right?.length ?? 1) * 1.2
+    }px`,
+  } as Record<string, string>;
 };
 
 export const MRT_DefaultColumn = {

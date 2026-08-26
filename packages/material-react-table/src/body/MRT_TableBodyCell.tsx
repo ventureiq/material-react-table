@@ -16,6 +16,7 @@ import { MRT_TableBodyRowGrabHandle } from './MRT_TableBodyRowGrabHandle';
 import { MRT_TableBodyCellValue } from './MRT_TableBodyCellValue';
 import {
   getCommonCellStyles,
+  getCommonCellVars,
   getIsFirstColumn,
   getIsLastColumn,
 } from '../column.utils';
@@ -209,6 +210,10 @@ export const MRT_TableBodyCell = ({
         }
       }}
       {...tableCellProps}
+      style={{
+        ...getCommonCellVars({column, table}),
+        ...tableCellProps?.style,
+      }}
       onDragEnter={handleDragEnter}
       onDoubleClick={handleDoubleClick}
       sx={(theme) => ({
