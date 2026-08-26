@@ -3,7 +3,7 @@ import {
   memo,
   type MouseEvent,
   type RefObject,
-  useEffect,
+  useCallback,
   useMemo, useRef,
   useState,
 } from 'react';
@@ -99,21 +99,19 @@ export const MRT_TableBodyCell = ({
       ? muiTableBodyCellSkeletonProps({ cell, column, row, table })
       : muiTableBodyCellSkeletonProps;
 
-  const [skeletonWidth, setSkeletonWidth] = useState(0);
-  useEffect(
-    () =>
-      setSkeletonWidth(
-        isLoading || showSkeletons
-          ? columnDefType === 'display'
-            ? column.getSize() / 2
-            : Math.round(
-                Math.random() * (column.getSize() - column.getSize() / 3) +
-                  column.getSize() / 3,
-              )
-          : 100,
-      ),
-    [],
-  );
+  // a lazy initializer, not a mount effect: setting this from useEffect made EVERY cell render
+  // a second time, on every mount, for a value only the skeleton branch below ever reads. The
+  // second render also re-ran the measureElement ref, so each cell measured itself twice.
+  const [skeletonWidth] = useState(() => {
+    return isLoading || showSkeletons
+      ? columnDefType === 'display'
+        ? geometry.size / 2
+        : Math.round(
+            Math.random() * (geometry.size - geometry.size / 3) +
+              geometry.size / 3,
+          )
+      : 100;
+  });
 
   const draggingBorders = useMemo(() => {
     const isDraggingColumn = draggingColumn?.id === column.id;
@@ -175,6 +173,17 @@ export const MRT_TableBodyCell = ({
     wasEditing = true;
   }
 
+  // stable identity: an inline arrow here is a new ref on every render, so React detaches and
+  // re-attaches it each time and measureElement re-reads the element's box
+  const handleRef = useCallback(
+    (node: HTMLTableCellElement) => {
+      if (node) {
+        measureElement?.(node);
+      }
+    },
+    [measureElement],
+  );
+
   const handleDoubleClick = (event: MouseEvent<HTMLTableCellElement>) => {
     tableCellProps?.onDoubleClick?.(event);
     if (isEditable && editingMode === 'cell') {
@@ -204,11 +213,7 @@ export const MRT_TableBodyCell = ({
   return (
     <TableCell
       data-index={virtualCell?.index}
-      ref={(node: HTMLTableCellElement) => {
-        if (node) {
-          measureElement?.(node);
-        }
-      }}
+      ref={handleRef}
       {...tableCellProps}
       style={{
         ...getCommonCellVars({column, table}),

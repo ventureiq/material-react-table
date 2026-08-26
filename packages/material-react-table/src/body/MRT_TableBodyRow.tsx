@@ -1,4 +1,4 @@
-import { type DragEvent, memo, useRef } from 'react';
+import { type DragEvent, memo, useCallback, useRef } from 'react';
 import TableRow from '@mui/material/TableRow';
 import { type Theme, alpha, darken, lighten } from '@mui/material/styles';
 import { Memo_MRT_TableBodyCell, MRT_TableBodyCell } from './MRT_TableBodyCell';
@@ -61,6 +61,18 @@ export const MRT_TableBodyRow = ({
 
   const rowRef = useRef<HTMLTableRowElement | null>(null);
 
+  // stable identity: an inline arrow here is a new ref on every render, so React detaches and
+  // re-attaches it each time and measureElement re-reads the row's box
+  const handleRef = useCallback(
+    (node: HTMLTableRowElement) => {
+      if (node) {
+        rowRef.current = node;
+        measureElement?.(node);
+      }
+    },
+    [measureElement],
+  );
+
   // hoisted out of the cell map: these were resolved once per cell, and getLeft/RightLeafColumns
   // are only memoized, not free
   const leftLeafColumnCount = table.getLeftLeafColumns().length;
@@ -72,12 +84,7 @@ export const MRT_TableBodyRow = ({
         data-index={virtualRow?.index}
         onDragEnter={handleDragEnter}
         selected={row.getIsSelected()}
-        ref={(node: HTMLTableRowElement) => {
-          if (node) {
-            rowRef.current = node;
-            measureElement?.(node);
-          }
-        }}
+        ref={handleRef}
         {...tableRowProps}
         sx={(theme: Theme) => ({
           backgroundColor: lighten(theme.palette.background.default, 0.06),
