@@ -1,6 +1,7 @@
 import TableRow from '@mui/material/TableRow';
 import { alpha, lighten } from '@mui/material/styles';
 import { MRT_TableHeadCell } from './MRT_TableHeadCell';
+import { getColumnGeometry } from '../column.utils';
 import { type VirtualItem } from '@tanstack/react-virtual';
 import {
   type MRT_Header,
@@ -34,6 +35,10 @@ export const MRT_TableHeadRow = ({
       ? muiTableHeadRowProps({ headerGroup, table })
       : muiTableHeadRowProps;
 
+  // hoisted out of the map: it was resolved once per header, and getLeftLeafColumns is only
+  // memoized, not free
+  const leftLeafColumnCount = table.getLeftLeafColumns().length;
+
   return (
     <TableRow
       {...tableRowProps}
@@ -47,7 +52,7 @@ export const MRT_TableHeadRow = ({
           : (tableRowProps?.sx as any)),
       })}
     >
-      {(virtualColumns && table.getLeftLeafColumns().length === 0) ? (
+      {(virtualColumns && leftLeafColumnCount === 0) ? (
           <th key="vp_left"
               className="MuiTableCell-padding MuiTableCell-padding-left"
               style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
@@ -61,14 +66,15 @@ export const MRT_TableHeadRow = ({
         const key = `key_${slotIdx}`;
 
         const renderedCell = <MRT_TableHeadCell key={key} header={header} table={table} />;
-        if (virtualColumns && header.column.getIsPinned() === 'left' && header.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
+        const geometry = getColumnGeometry(table, header.column);
+        if (virtualColumns && geometry.pinned === 'left' && geometry.pinnedIndex === (leftLeafColumnCount - 1)) {
             return [
                 renderedCell,
                 <th key="vp_left"
                     className="MuiTableCell-padding MuiTableCell-padding-left"
                     style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />,
             ]
-        } else if (virtualColumns && header.column.getIsPinned() === 'right' && header.column.getPinnedIndex() === 0) {
+        } else if (virtualColumns && geometry.isFirstRightPinned) {
             return [
                 <th key="vp_right"
                     className="MuiTableCell-padding MuiTableCell-padding-right"

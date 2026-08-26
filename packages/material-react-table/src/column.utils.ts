@@ -9,6 +9,8 @@ import {
   type MaterialReactTableProps,
   type MRT_Column,
   type MRT_ColumnDef,
+  type MRT_ColumnGeometry,
+  type MRT_TableGeometry,
   type MRT_ColumnOrderState,
   type MRT_DefinedColumnDef,
   type MRT_DisplayColumnIds,
@@ -213,40 +215,168 @@ export const getDefaultColumnFilterFn = <
   return 'fuzzy';
 };
 
+// Every value below is a property of the COLUMN, never of the cell - yet each one used to be
+// recomputed for every cell of every row. getIsPinned() maps a column's leaf ids and scans both
+// pinning arrays, getPinnedIndex() calls it again internally, and getStart() recurses through
+// every preceding column while re-deriving getVisibleLeafColumns() at each level. Rendering one
+// screen of a wide table ran that thousands of times to produce one value per column.
+//
+// buildColumnGeometry computes all of them once per render in a few linear passes. It is
+// assigned to the table instance in MRT_TableRoot, which owns the state these derive from, so
+// what a cell reads is always from the current render - no cache key, nothing to invalidate.
+export const buildColumnGeometry = (
+  table: MRT_TableInstance,
+): MRT_TableGeometry => {
+  const { columnPinning } = table.getState();
+  // kept raw: `?? 1` below distinguishes an absent array from an empty one, and the original
+  // margin expressions depend on that difference
+  const left = columnPinning?.left;
+  const right = columnPinning?.right;
+
+  const visible = table.getVisibleLeafColumns();
+  const visibleCount = visible.length;
+  const visibleIndexes: Record<string, number> = {};
+  visible.forEach((column, index) => {
+    visibleIndexes[column.id] = index;
+  });
+
+  // getStart('left') is a prefix sum over the left-pinned visible columns - one pass here
+  // instead of a recursion per cell
+  const starts: Record<string, number> = {};
+  let offset = 0;
+  table.getLeftVisibleLeafColumns().forEach((column) => {
+    starts[column.id] = offset;
+    offset += column.getSize();
+  });
+
+  // getTotalRight is the suffix sum over the right-pinned headers, indexed by pinned index
+  const rightHeaders = table.getRightLeafHeaders();
+  const rightSuffix: number[] = new Array(rightHeaders.length + 1).fill(0);
+  for (let i = rightHeaders.length - 1; i >= 0; i--) {
+    rightSuffix[i] = rightSuffix[i + 1] + rightHeaders[i].getSize();
+  }
+
+  const leftHeaders = table.getLeftLeafHeaders();
+  const leftHeaderCount = leftHeaders.length;
+  const totalLeftWidth = leftHeaders.reduce((sum, header) => {
+    return sum + header.column.getSize();
+  }, 0);
+
+  const columns: Record<string, MRT_ColumnGeometry> = {};
+
+  // flat, so group columns are covered too - their pinned state reads from their leaves,
+  // exactly as table-core's getIsPinned does
+  table.getAllFlatColumns().forEach((column) => {
+    const leafIds = column.getLeafColumns().map((d) => d.id);
+    const isLeft = leafIds.some((id) => left?.includes(id));
+    const isRight = leafIds.some((id) => right?.includes(id));
+    const pinned = isLeft ? 'left' : isRight ? 'right' : false;
+    // table-core returns 0 for an unpinned column, and -1 for a pinned one whose own id is not
+    // in the array (a group). Both are preserved.
+    const pinnedIndex = pinned
+      ? (pinned === 'left' ? left : right)?.indexOf(column.id) ?? -1
+      : 0;
+    const size = column.getSize();
+    const index = visibleIndexes[column.id] ?? -1;
+
+    columns[column.id] = {
+      index,
+      isFirstColumn: index === 0,
+      isFirstLeftPinned: pinned === 'left' && pinnedIndex === 0,
+      isFirstRightPinned: pinned === 'right' && pinnedIndex === 0,
+      isLastColumn: index === visibleCount - 1,
+      isLastLeftPinned: pinned === 'left' && leftHeaderCount - 1 === pinnedIndex,
+      isLastRightPinned:
+        pinned === 'right' && pinnedIndex === rightHeaders.length - 1,
+      marginLeft: size * (left?.length ?? 1),
+      marginRight: size * (right?.length ?? 1) * 1.2,
+      minSize: column.columnDef.minSize ?? 30,
+      pinned,
+      pinnedIndex,
+      size,
+      start: starts[column.id] ?? 0,
+      totalRight: rightSuffix[pinnedIndex + 1] ?? 0,
+    };
+  });
+
+  return {
+    columns,
+    totalLeftWidth,
+    totalRightWidth: rightSuffix[0],
+    visibleCount,
+  };
+};
+
+const EMPTY_COLUMN_GEOMETRY: MRT_ColumnGeometry = {
+  index: -1,
+  isFirstColumn: false,
+  isFirstLeftPinned: false,
+  isFirstRightPinned: false,
+  isLastColumn: false,
+  isLastLeftPinned: false,
+  isLastRightPinned: false,
+  marginLeft: 0,
+  marginRight: 0,
+  minSize: 30,
+  pinned: false,
+  pinnedIndex: 0,
+  size: 0,
+  start: 0,
+  totalRight: 0,
+};
+
+const EMPTY_TABLE_GEOMETRY: MRT_TableGeometry = {
+  columns: {},
+  totalLeftWidth: 0,
+  totalRightWidth: 0,
+  visibleCount: 0,
+};
+
+export const getTableGeometry = (
+  table: MRT_TableInstance,
+): MRT_TableGeometry => {
+  return table.columnGeometry ?? EMPTY_TABLE_GEOMETRY;
+};
+
+// takes anything with an id, so callers holding a raw table-core Column (getVisibleLeafColumns)
+// do not need a cast
+export const getColumnGeometry = (
+  table: MRT_TableInstance,
+  column: { id: string },
+): MRT_ColumnGeometry => {
+  return table.columnGeometry?.columns?.[column.id] ?? EMPTY_COLUMN_GEOMETRY;
+};
+
 export const getIsFirstColumn = (
   column: MRT_Column,
   table: MRT_TableInstance,
 ) => {
-  return table.getVisibleLeafColumns()[0].id === column.id;
+  return getColumnGeometry(table, column).isFirstColumn;
 };
 
 export const getIsLastColumn = (
   column: MRT_Column,
   table: MRT_TableInstance,
 ) => {
-  const columns = table.getVisibleLeafColumns();
-  return columns[columns.length - 1].id === column.id;
+  return getColumnGeometry(table, column).isLastColumn;
 };
 
 export const getIsLastLeftPinnedColumn = (
   table: MRT_TableInstance,
   column: MRT_Column,
 ) => {
-  return (
-    column.getIsPinned() === 'left' &&
-    table.getLeftLeafHeaders().length - 1 === column.getPinnedIndex()
-  );
+  return getColumnGeometry(table, column).isLastLeftPinned;
 };
 
-export const getIsFirstRightPinnedColumn = (column: MRT_Column) => {
-  return column.getIsPinned() === 'right' && column.getPinnedIndex() === 0;
+export const getIsFirstRightPinnedColumn = (
+  column: MRT_Column,
+  table: MRT_TableInstance,
+) => {
+  return getColumnGeometry(table, column).isFirstRightPinned;
 };
 
 export const getTotalRight = (table: MRT_TableInstance, column: MRT_Column) => {
-  return table
-    .getRightLeafHeaders()
-    .slice(column.getPinnedIndex() + 1)
-    .reduce((acc, col) => acc + col.getSize(), 0);
+  return getColumnGeometry(table, column).totalRight;
 };
 
 export const getCommonCellStyles = ({
@@ -261,24 +391,18 @@ export const getCommonCellStyles = ({
   tableCellProps: TableCellProps;
   theme: Theme;
 }) => {
-  // this runs for every cell of every row. Nothing below can change mid-expression,
-  // so each of these is read once instead of repeatedly: getIsPinned() was called
-  // six times, and it is not cheap - it maps every leaf column id and scans the
-  // pinning arrays twice. getState() was read four times, parseCSSVarId three.
   const { enableColumnResizing, enableColumnVirtualization, layoutMode } =
     table.options;
   const state = table.getState();
-  const pinned = column.getIsPinned();
+  const geometry = getColumnGeometry(table, column);
+  const pinned = geometry.pinned;
   const isGroup = column.columnDef.columnDefType === 'group';
 
-  // getPinnedIndex() calls getIsPinned() again internally, so it stays behind the
-  // same short circuits the original had
-  const isLeftEdge =
-    enableColumnVirtualization && pinned === 'left' && column.getPinnedIndex() === 0;
+  const isLeftEdge = enableColumnVirtualization && geometry.isFirstLeftPinned;
   const isRightEdge =
     enableColumnVirtualization &&
     pinned === 'right' &&
-    column.getPinnedIndex() === table.getVisibleLeafColumns().length - 1;
+    geometry.pinnedIndex === getTableGeometry(table).visibleCount - 1;
 
   // Fixed names, so the css text is identical for every column. The per-column values are
   // set inline by getCommonCellVars below: putting `--${sizeVar}-size` or a computed pixel
@@ -294,9 +418,9 @@ export const getCommonCellStyles = ({
         ? alpha(lighten(theme.palette.background.default, 0.04), 0.97)
         : 'inherit',
     backgroundImage: 'inherit',
-    boxShadow: getIsLastLeftPinnedColumn(table, column)
+    boxShadow: geometry.isLastLeftPinned
       ? `-4px 0 8px -6px ${alpha(theme.palette.common.black, 0.2)} inset`
-      : getIsFirstRightPinnedColumn(column)
+      : geometry.isFirstRightPinned
       ? `4px 0 8px -6px ${alpha(theme.palette.common.black, 0.2)} inset`
       : undefined,
     display: layoutMode === 'grid' ? 'flex' : 'table-cell',
@@ -335,27 +459,22 @@ export const getCommonCellVars = ({
   header?: MRT_Header;
   table: MRT_TableInstance;
 }) => {
-  const state = table.getState();
-  const pinned = column.getIsPinned();
+  const geometry = getColumnGeometry(table, column);
   const sizeVar = `${header ? 'header' : 'col'}-${parseCSSVarId(
     header?.id ?? column.id,
   )}`;
 
   return {
     '--mrt-size': `var(--${sizeVar}-size)`,
-    '--mrt-min-size': `${column.columnDef.minSize ?? 30}px`,
-    ...(pinned === 'left'
-      ? {'--mrt-left': `${column.getStart('left')}px`}
+    '--mrt-min-size': `${geometry.minSize}px`,
+    ...(geometry.pinned === 'left'
+      ? {'--mrt-left': `${geometry.start}px`}
       : null),
-    ...(pinned === 'right'
-      ? {'--mrt-right': `${getTotalRight(table, column)}px`}
+    ...(geometry.pinned === 'right'
+      ? {'--mrt-right': `${geometry.totalRight}px`}
       : null),
-    '--mrt-ml': `-${
-      column.getSize() * (state.columnPinning.left?.length ?? 1)
-    }px`,
-    '--mrt-mr': `-${
-      column.getSize() * (state.columnPinning.right?.length ?? 1) * 1.2
-    }px`,
+    '--mrt-ml': `-${geometry.marginLeft}px`,
+    '--mrt-mr': `-${geometry.marginRight}px`,
   } as Record<string, string>;
 };
 

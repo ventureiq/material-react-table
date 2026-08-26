@@ -1,5 +1,6 @@
 export * from './MaterialReactTable';
 export * from './types';
+export { getColumnGeometry, getTableGeometry } from './column.utils';
 
 import { MRT_BottomToolbar } from './toolbar/MRT_BottomToolbar';
 import { MRT_CopyButton } from './buttons/MRT_CopyButton';

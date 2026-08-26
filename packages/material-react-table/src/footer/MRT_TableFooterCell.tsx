@@ -1,5 +1,9 @@
 import TableCell from '@mui/material/TableCell';
-import { getCommonCellStyles, getCommonCellVars } from '../column.utils';
+import {
+  getColumnGeometry,
+  getCommonCellStyles,
+  getCommonCellVars,
+} from '../column.utils';
 import { type MRT_Header, type MRT_TableInstance } from '../types';
 
 interface Props {
@@ -53,7 +57,10 @@ export const MRT_TableFooterCell = ({ footer, table }: Props) => {
             ? '1rem'
             : '1.5rem',
         verticalAlign: 'top',
-        zIndex: column.getIsPinned() && columnDefType !== 'group' ? 2 : 1,
+        zIndex:
+          getColumnGeometry(table, column).pinned && columnDefType !== 'group'
+            ? 2
+            : 1,
         ...getCommonCellStyles({
           column,
           table,

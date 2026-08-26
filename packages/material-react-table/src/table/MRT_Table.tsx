@@ -9,7 +9,7 @@ import Table from '@mui/material/Table';
 import { MRT_TableHead } from '../head/MRT_TableHead';
 import { Memo_MRT_TableBody, MRT_TableBody } from '../body/MRT_TableBody';
 import { MRT_TableFooter } from '../footer/MRT_TableFooter';
-import { parseCSSVarId } from '../column.utils';
+import { getColumnGeometry, parseCSSVarId } from '../column.utils';
 import { type MRT_TableInstance } from '../types';
 import {useRecycleSlots} from "../hook.utils";
 
@@ -141,12 +141,23 @@ export const MRT_Table = ({ table }: Props) => {
   const columnRecycleSlots = useRecycleSlots();
   if (virtualColumns) {
     const columns = table.getVisibleLeafColumns();
+    // one geometry lookup per column, instead of a getIsPinned() per column per filter pass
+    // and another getPinnedIndex() per comparison
+    const geometries = columns.map((c) => getColumnGeometry(table, c));
+    const byPosition = (position: 'left' | 'right') => {
+      return columns
+        .filter((_, i) => geometries[i].pinned === position)
+        .sort((a, b) => {
+          return (
+            getColumnGeometry(table, a).pinnedIndex -
+            getColumnGeometry(table, b).pinnedIndex
+          );
+        });
+    };
     columnRecycleSlots.refresh(virtualColumns, (
-      columns.filter((c) => c.getIsPinned() === 'left')
-        .sort((a, b) => a.getPinnedIndex() - b.getPinnedIndex())
-        .concat(columns.filter((c) => !c.getIsPinned()))
-        .concat(columns.filter((c) => c.getIsPinned() === 'right')
-          .sort((a, b) => a.getPinnedIndex() - b.getPinnedIndex()))
+      byPosition('left')
+        .concat(columns.filter((_, i) => !geometries[i].pinned))
+        .concat(byPosition('right'))
     ));
   }
 

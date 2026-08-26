@@ -3,6 +3,7 @@ import TableRow from '@mui/material/TableRow';
 import { type Theme, alpha, darken, lighten } from '@mui/material/styles';
 import { Memo_MRT_TableBodyCell, MRT_TableBodyCell } from './MRT_TableBodyCell';
 import { MRT_TableDetailPanel } from './MRT_TableDetailPanel';
+import { getColumnGeometry } from '../column.utils';
 import { type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
 import { type MRT_Cell, type MRT_Row, type MRT_TableInstance } from '../types';
 
@@ -60,6 +61,11 @@ export const MRT_TableBodyRow = ({
 
   const rowRef = useRef<HTMLTableRowElement | null>(null);
 
+  // hoisted out of the cell map: these were resolved once per cell, and getLeft/RightLeafColumns
+  // are only memoized, not free
+  const leftLeafColumnCount = table.getLeftLeafColumns().length;
+  const rightLeafColumnCount = table.getRightLeafColumns().length;
+
   return (
     <>
       <TableRow
@@ -104,7 +110,7 @@ export const MRT_TableBodyRow = ({
           ...tableRowProps?.style,
         }}
       >
-        {(virtualColumns && table.getLeftLeafColumns().length === 0) ? (
+        {(virtualColumns && leftLeafColumnCount === 0) ? (
             <td key="vp_left"
                 className="MuiTableCell-padding MuiTableCell-padding-left"
                 style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
@@ -148,14 +154,15 @@ export const MRT_TableBodyRow = ({
             <MRT_TableBodyCell key={key} {...props} />
           );
 
-          if (virtualColumns && cell.column.getIsPinned() === 'left' && cell.column.getPinnedIndex() === (table.getLeftLeafColumns().length - 1)) {
+          const geometry = getColumnGeometry(table, cell.column);
+          if (virtualColumns && geometry.pinned === 'left' && geometry.pinnedIndex === (leftLeafColumnCount - 1)) {
             return [
               renderedCell,
               <td key="vp_left"
                   className="MuiTableCell-padding MuiTableCell-padding-left"
                   style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />,
             ]
-          } else if (virtualColumns && cell.column.getIsPinned() === 'right' && cell.column.getPinnedIndex() === 0) {
+          } else if (virtualColumns && geometry.isFirstRightPinned) {
             return [
               <td key="vp_right"
                   className="MuiTableCell-padding MuiTableCell-padding-right"
@@ -166,7 +173,7 @@ export const MRT_TableBodyRow = ({
             return renderedCell;
           }
         })}
-        {(virtualColumns && table.getRightLeafColumns().length === 0) ? (
+        {(virtualColumns && rightLeafColumnCount === 0) ? (
           <td key="vp_right"
               className="MuiTableCell-padding MuiTableCell-padding-right"
               style={{ display: 'flex', padding: '0px', width: virtualPaddingRight }} />

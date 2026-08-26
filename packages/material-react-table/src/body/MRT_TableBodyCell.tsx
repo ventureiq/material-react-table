@@ -15,10 +15,9 @@ import { MRT_CopyButton } from '../buttons/MRT_CopyButton';
 import { MRT_TableBodyRowGrabHandle } from './MRT_TableBodyRowGrabHandle';
 import { MRT_TableBodyCellValue } from './MRT_TableBodyCellValue';
 import {
+  getColumnGeometry,
   getCommonCellStyles,
   getCommonCellVars,
-  getIsFirstColumn,
-  getIsLastColumn,
 } from '../column.utils';
 import { type VirtualItem } from '@tanstack/react-virtual';
 import { type MRT_Cell, type MRT_TableInstance } from '../types';
@@ -78,6 +77,7 @@ export const MRT_TableBodyCell = ({
   const { column, row } = cell;
   const { columnDef } = column;
   const { columnDefType } = columnDef;
+  const geometry = getColumnGeometry(table, column);
 
   const mTableCellBodyProps =
     muiTableBodyCellProps instanceof Function
@@ -120,8 +120,8 @@ export const MRT_TableBodyCell = ({
     const isHoveredColumn = hoveredColumn?.id === column.id;
     const isDraggingRow = draggingRow?.id === row.id;
     const isHoveredRow = hoveredRow?.id === row.id;
-    const isFirstColumn = getIsFirstColumn(column, table);
-    const isLastColumn = getIsLastColumn(column, table);
+    const isFirstColumn = geometry.isFirstColumn;
+    const isLastColumn = geometry.isLastColumn;
     const isLastRow = rowIndex === numRows - 1;
 
     const borderStyle =
@@ -152,7 +152,7 @@ export const MRT_TableBodyCell = ({
           borderTop: isDraggingRow || isHoveredRow ? borderStyle : undefined,
         }
       : undefined;
-  }, [draggingColumn, draggingRow, hoveredColumn, hoveredRow, rowIndex]);
+  }, [draggingColumn, draggingRow, geometry, hoveredColumn, hoveredRow, rowIndex]);
 
   const isEditable =
     (enableEditing instanceof Function ? enableEditing(row) : enableEditing) &&
@@ -248,7 +248,7 @@ export const MRT_TableBodyCell = ({
         textOverflow: columnDefType !== 'display' ? 'ellipsis' : undefined,
         whiteSpace: density === 'compact' ? 'nowrap' : 'normal',
         zIndex:
-          draggingColumn?.id === column.id ? 2 : column.getIsPinned() ? 1 : 0,
+          draggingColumn?.id === column.id ? 2 : geometry.pinned ? 1 : 0,
         '&:hover': {
           outline: ['table', 'cell'].includes(editingMode ?? '')
             ? `1px solid ${theme.palette.text.secondary}`

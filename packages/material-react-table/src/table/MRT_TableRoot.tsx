@@ -19,6 +19,7 @@ import { MRT_ExpandButton } from '../buttons/MRT_ExpandButton';
 import { MRT_ToggleRowActionMenuButton } from '../buttons/MRT_ToggleRowActionMenuButton';
 import { MRT_SelectCheckbox } from '../inputs/MRT_SelectCheckbox';
 import { MRT_TablePaper } from './MRT_TablePaper';
+import { useColumnGeometry } from '../hook.utils';
 import { MRT_EditRowModal } from '../body/MRT_EditRowModal';
 import {
   prepareColumns,
@@ -366,6 +367,10 @@ export const MRT_TableRoot: any = <TData extends Record<string, any> = {}>(
   if (props.tableInstanceRef) {
     props.tableInstanceRef.current = table;
   }
+
+  // Assigned here, in the component that owns the state it derives from, so every head, body
+  // and footer cell rendered below reads values from the current render.
+  table.columnGeometry = useColumnGeometry(table as any);
 
   const initialBodyHeight = useRef<string>();
 

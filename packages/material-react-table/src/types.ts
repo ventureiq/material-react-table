@@ -188,6 +188,31 @@ export interface MRT_RowModel<TData extends Record<string, any> = {}> {
   rowsById: { [key: string]: MRT_Row<TData> };
 }
 
+export interface MRT_ColumnGeometry {
+  index: number;
+  isFirstColumn: boolean;
+  isFirstLeftPinned: boolean;
+  isFirstRightPinned: boolean;
+  isLastColumn: boolean;
+  isLastLeftPinned: boolean;
+  isLastRightPinned: boolean;
+  marginLeft: number;
+  marginRight: number;
+  minSize: number;
+  pinned: 'left' | 'right' | false;
+  pinnedIndex: number;
+  size: number;
+  start: number;
+  totalRight: number;
+}
+
+export interface MRT_TableGeometry {
+  columns: Record<string, MRT_ColumnGeometry>;
+  totalLeftWidth: number;
+  totalRightWidth: number;
+  visibleCount: number;
+}
+
 export type MRT_TableInstance<TData extends Record<string, any> = {}> =
   Prettify<
     Omit<
@@ -228,6 +253,7 @@ export type MRT_TableInstance<TData extends Record<string, any> = {}> =
         icons: MRT_Icons;
         localization: MRT_Localization;
       };
+      columnGeometry: MRT_TableGeometry;
       refs: {
         bottomToolbarRef: MutableRefObject<HTMLDivElement>;
         editInputRefs: MutableRefObject<Record<string, HTMLInputElement>>;

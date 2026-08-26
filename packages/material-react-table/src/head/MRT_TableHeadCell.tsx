@@ -8,7 +8,11 @@ import { MRT_TableHeadCellFilterLabel } from './MRT_TableHeadCellFilterLabel';
 import { MRT_TableHeadCellGrabHandle } from './MRT_TableHeadCellGrabHandle';
 import { MRT_TableHeadCellResizeHandle } from './MRT_TableHeadCellResizeHandle';
 import { MRT_TableHeadCellSortLabel } from './MRT_TableHeadCellSortLabel';
-import { getCommonCellStyles, getCommonCellVars } from '../column.utils';
+import {
+  getColumnGeometry,
+  getCommonCellStyles,
+  getCommonCellVars,
+} from '../column.utils';
 import { type Theme } from '@mui/material/styles';
 import { type MRT_Header, type MRT_TableInstance } from '../types';
 
@@ -164,7 +168,7 @@ export const MRT_TableHeadCell = ({ header, table }: Props) => {
         zIndex:
           column.getIsResizing() || draggingColumn?.id === column.id
             ? 3
-            : column.getIsPinned() && columnDefType !== 'group'
+            : getColumnGeometry(table, column).pinned && columnDefType !== 'group'
             ? 2
             : 1,
         ...getCommonCellStyles({
