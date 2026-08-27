@@ -1,7 +1,7 @@
 import { type MouseEvent } from 'react';
 import Checkbox from '@mui/material/Checkbox';
 import Tooltip from '@mui/material/Tooltip';
-import Radio from '@mui/material/Radio';
+import Radio, { type RadioProps } from '@mui/material/Radio';
 import { type Theme } from '@mui/material/styles';
 import { type MRT_Row, type MRT_TableInstance } from '../types';
 
@@ -81,7 +81,16 @@ export const MRT_SelectCheckbox = ({ row, selectAll, table }: Props) => {
       }
     >
       {enableMultiRowSelection === false ? (
-        <Radio {...commonProps} />
+        <Radio
+          {...commonProps}
+          // MUI 7 added 'large' to Checkbox but not to Radio, and commonProps is spread from
+          // muiSelectCheckboxProps - so a caller's size has to be narrowed here, not just typed
+          size={
+            commonProps.size === 'large'
+              ? 'medium'
+              : (commonProps.size as RadioProps['size'])
+          }
+        />
       ) : (
         <Checkbox
           indeterminate={
