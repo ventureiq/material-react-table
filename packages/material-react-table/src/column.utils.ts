@@ -447,7 +447,7 @@ export const getCommonCellStyles = ({
 };
 
 // The values behind the fixed names above, set as inline custom properties on the cell.
-// The table already publishes every column's size as `--header-x-size` / `--col-x-size` in
+// The table already publishes every column's size as `--mrt-header-x-size` / `--mrt-col-x-size` in
 // one inline style on the <table> (MRT_Table), so this only aliases it - resizing keeps
 // flowing through exactly the same path.
 export const getCommonCellVars = ({
@@ -460,7 +460,7 @@ export const getCommonCellVars = ({
   table: MRT_TableInstance;
 }) => {
   const geometry = getColumnGeometry(table, column);
-  const sizeVar = `${header ? 'header' : 'col'}-${parseCSSVarId(
+  const sizeVar = `${header ? 'mrt-header' : 'mrt-col'}-${parseCSSVarId(
     header?.id ?? column.id,
   )}`;
 

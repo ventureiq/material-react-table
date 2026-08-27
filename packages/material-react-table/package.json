@@ -65,8 +65,8 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@faker-js/faker": "^8.0.2",
-    "@mui/icons-material": "^5.11.16",
-    "@mui/material": "^5.13.5",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-typescript": "^11.1.1",
@@ -106,8 +106,8 @@
   "peerDependencies": {
     "@emotion/react": ">=11",
     "@emotion/styled": ">=11",
-    "@mui/icons-material": ">=5",
-    "@mui/material": ">=5",
+    "@mui/icons-material": ">=7",
+    "@mui/material": ">=7",
     "react": ">=17.0",
     "react-dom": ">=17.0"
   },
