@@ -333,6 +333,7 @@ export type MRT_ColumnDef<TData extends Record<string, any> = {}> =
     Cell?: (props: {
       cell: MRT_Cell<TData>;
       columnIndex: number;
+      renderCount: number;
       wasEditing: boolean;
       renderedCellValue: number | string | ReactNode;
       column: MRT_Column<TData>;

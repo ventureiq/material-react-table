@@ -25,6 +25,7 @@ import { type MRT_Cell, type MRT_TableInstance } from '../types';
 interface Props {
   cell: MRT_Cell;
   columnIndex: number;
+  renderCount: number;
   measureElement?: (element: HTMLTableCellElement) => void;
   numRows: number;
   rowIndex: number;
@@ -36,6 +37,7 @@ interface Props {
 export const MRT_TableBodyCell = ({
   cell,
   columnIndex,
+  renderCount,
   measureElement,
   numRows,
   rowIndex,
@@ -297,6 +299,7 @@ export const MRT_TableBodyCell = ({
           columnDef.Cell?.({
             cell,
             columnIndex,
+            renderCount,
             wasEditing,
             renderedCellValue: cell.renderValue() as any,
             column,
@@ -308,10 +311,10 @@ export const MRT_TableBodyCell = ({
         ) : (enableClickToCopy || columnDef.enableClickToCopy) &&
           columnDef.enableClickToCopy !== false ? (
           <MRT_CopyButton cell={cell} table={table}>
-            <MRT_TableBodyCellValue cell={cell} columnIndex={columnIndex} table={table} wasEditing={wasEditing}/>
+            <MRT_TableBodyCellValue cell={cell} columnIndex={columnIndex} renderCount={renderCount} table={table} wasEditing={wasEditing}/>
           </MRT_CopyButton>
         ) : (
-          <MRT_TableBodyCellValue cell={cell} columnIndex={columnIndex} table={table} wasEditing={wasEditing}/>
+          <MRT_TableBodyCellValue cell={cell} columnIndex={columnIndex} renderCount={renderCount} table={table} wasEditing={wasEditing}/>
         )}
         {cell.getIsGrouped() && !columnDef.GroupedCell && (
           <> ({row.subRows?.length})</>
