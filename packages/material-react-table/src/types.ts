@@ -208,6 +208,7 @@ export interface MRT_ColumnGeometry {
 
 export interface MRT_TableGeometry {
   columns: Record<string, MRT_ColumnGeometry>;
+  pinnedCount: number;
   totalLeftWidth: number;
   totalRightWidth: number;
   visibleCount: number;
@@ -254,6 +255,7 @@ export type MRT_TableInstance<TData extends Record<string, any> = {}> =
         localization: MRT_Localization;
       };
       columnGeometry: MRT_TableGeometry;
+      columnRenderCount: number;
       rowRenderCount: number;
       refs: {
         bottomToolbarRef: MutableRefObject<HTMLDivElement>;
@@ -333,8 +335,6 @@ export type MRT_ColumnDef<TData extends Record<string, any> = {}> =
     }) => ReactNode;
     Cell?: (props: {
       cell: MRT_Cell<TData>;
-      columnIndex: number;
-      renderCount: number;
       wasEditing: boolean;
       renderedCellValue: number | string | ReactNode;
       column: MRT_Column<TData>;

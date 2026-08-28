@@ -122,11 +122,7 @@ export const MRT_TableBodyRow = ({
                 className="MuiTableCell-padding MuiTableCell-padding-left"
                 style={{ display: 'flex', padding: '0px', width: virtualPaddingLeft }} />
         ) : null}
-        {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell, cellIndex, renderedCells) => {
-          // the column's position among the visible columns, already known here.
-          // Deriving it inside a cell with getVisibleLeafColumns().findIndex() cost
-          // ~9% of a production scroll: that call is memoized by table-core but its
-          // memo KEY is not, so every call re-scans and re-joins every column id.
+        {(virtualColumns ?? row.getVisibleCells()).map((cellOrVirtualCell, cellIndex) => {
           const columnIndex = columnVirtualizer
             ? (cellOrVirtualCell as VirtualItem).index
             : cellIndex;
@@ -140,10 +136,6 @@ export const MRT_TableBodyRow = ({
 
           const props = {
             cell,
-            columnIndex,
-            // how many cells this row actually renders, not how many columns are visible in
-            // state - with column virtualization those are very different numbers
-            renderCount: renderedCells.length,
             measureElement: columnVirtualizer?.measureElement,
             numRows,
             rowIndex,

@@ -156,8 +156,9 @@ export const MRT_TableBody = ({
     rowRecycleSlots.refresh(virtualRows, rows);
   }
 
-  // the rows actually painted, not every row in the model
+  // what is actually painted in each direction, not the totals in state
   table.rowRenderCount = (virtualRows ?? rows).length;
+  table.columnRenderCount = virtualColumns?.length ?? table.getVisibleLeafColumns().length;
 
   return (
     <TableBody

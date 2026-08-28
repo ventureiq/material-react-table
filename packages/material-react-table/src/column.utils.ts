@@ -301,6 +301,7 @@ export const buildColumnGeometry = (
 
   return {
     columns,
+    pinnedCount: leftHeaderCount + rightHeaders.length,
     totalLeftWidth,
     totalRightWidth: rightSuffix[0],
     visibleCount,
@@ -327,6 +328,7 @@ const EMPTY_COLUMN_GEOMETRY: MRT_ColumnGeometry = {
 
 const EMPTY_TABLE_GEOMETRY: MRT_TableGeometry = {
   columns: {},
+  pinnedCount: 0,
   totalLeftWidth: 0,
   totalRightWidth: 0,
   visibleCount: 0,
