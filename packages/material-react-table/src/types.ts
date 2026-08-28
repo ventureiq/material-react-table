@@ -254,6 +254,7 @@ export type MRT_TableInstance<TData extends Record<string, any> = {}> =
         localization: MRT_Localization;
       };
       columnGeometry: MRT_TableGeometry;
+      rowRenderCount: number;
       refs: {
         bottomToolbarRef: MutableRefObject<HTMLDivElement>;
         editInputRefs: MutableRefObject<Record<string, HTMLInputElement>>;
