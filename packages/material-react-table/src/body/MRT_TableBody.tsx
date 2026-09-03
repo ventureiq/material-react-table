@@ -160,14 +160,23 @@ export const MRT_TableBody = ({
   table.rowRenderCount = (virtualRows ?? rows).length;
   table.columnRenderCount = virtualColumns?.length ?? table.getVisibleLeafColumns().length;
 
+  // The virtualizer's total height changes with the row count, so interpolating it into the sx
+  // mints a styled class per distinct height - a new one on every collection, filter and load-more.
+  // It goes inline as a custom property instead (the same aliasing --mrt-*-size uses), leaving the
+  // sx height constant so one class covers every table. inherit keeps the non-virtualized path.
+  const bodyHeightVars: { [key: string]: string } = {
+    '--mrt-body-height': rowVirtualizer
+      ? `${rowVirtualizer.getTotalSize()}px`
+      : 'inherit',
+  };
+
   return (
     <TableBody
       {...tableBodyProps}
+      style={{ ...bodyHeightVars, ...tableBodyProps?.style }}
       sx={(theme) => ({
         display: layoutMode === 'grid' ? 'grid' : 'table-row-group',
-        height: rowVirtualizer
-          ? `${rowVirtualizer.getTotalSize()}px`
-          : 'inherit',
+        height: 'var(--mrt-body-height)',
         minHeight: !rows.length ? '100px' : undefined,
         position: 'relative',
         ...(tableBodyProps?.sx instanceof Function
